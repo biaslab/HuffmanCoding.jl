@@ -1,19 +1,18 @@
 # HuffmanCoding.jl
 
-An interface template for a fixed Huffman codebook with cached bit sequences and
-node paths. The package currently contains only type and function declarations.
-The interface tests intentionally fail until the methods are implemented.
+A fixed Huffman codebook with cached bit sequences and internal node paths.
+Build the tree once, then look up each object's code and path through a dictionary.
 
-## Intended interface
+## Interface
 
 ```julia
 using HuffmanCoding
 
-weights = Dict(:a => 6, :b => 3, :c => 1)
+weights = Dict(:a => 1, :b => 2, :c => 3)
 hc = build(weights)
 
 hc[:a]             # read-only, iterable Bool sequence
-nodepath(hc, :a)   # read-only, iterable Int node IDs
+nodepath(hc, :a)   # read-only, iterable Int internal-node IDs
 keys(hc)           # supported vocabulary
 haskey(hc, :a)     # vocabulary membership
 length(hc)         # vocabulary size
@@ -23,33 +22,52 @@ for bit in hc[:a]
 end
 ```
 
-Both sequences support indexing and `length`. A node path excludes the root and
-includes the leaf: element `i` is the node reached after taking bit `i`. Node IDs
-are meaningful only within their own codebook. Both lookups raise `KeyError` for
-unknown objects. The codebook and its returned sequences expose no indexed
-assignment.
+Both sequences support indexing and `length`, with one internal node per bit.
+For a nonempty code, a node path includes the root and excludes the leaf: element
+`i` is the node where bit `i` chooses a child. Node IDs are meaningful only within
+their own codebook. Both lookups raise `KeyError` for unknown objects. The codebook
+and its returned sequences expose no indexed assignment.
 
-`build(weights)` will return a `HuffmanCode` whose default tree is an
+`build(weights)` returns a `HuffmanCode` whose default tree is an
 [`AbstractTrees.StableNode`](https://juliacollections.github.io/AbstractTrees.jl/stable/#Type-Stability-and-Performance).
 Internal nodes have two ordered children. The codebook's `tree::T` field remains
 generic, so other tree representations can also be stored. Node IDs belong to
 the codebook and do not have to be array positions.
 
-`HuffmanCode` holds the tree, a weight mapping, and an internal dictionary whose
-entries contain both bits and node paths. The dictionary keys supply the
-vocabulary. `build` will copy the input weight mapping: changing, adding, or
-deleting its entries will leave the built codebook unchanged. Vocabulary objects
-themselves are not deep-copied.
+Each default-tree node exposes an `id::Int` and an `object` through
+`AbstractTrees.nodevalue(node)`. Leaves store the vocabulary objects they encode;
+internal nodes have `object = nothing`. A node is a leaf when it has no children,
+so `nothing` can also be a legitimate vocabulary object. Each vocabulary object
+labels exactly one leaf.
+
+Following bits from the root (`false` selects the first child, `true` the second)
+ends at the leaf containing the encoded object. For example, the test fixture's
+code `10` reaches node 4, then leaf 1 with `(id = 1, object = :a)`. This makes the
+tree interpretable without a separate leaf-to-object dictionary or the original
+weights. `nodepath(hc, :a)` is `[5, 4]`: bit `1` is chosen at root 5, then bit `0`
+at internal node 4. The sibling `:b` has code `11` and the same node path `[5, 4]`;
+the final bit selects a different leaf. For `:c`, code `0` has node path `[5]`.
+
+`HuffmanCode` holds only the tree and an internal dictionary whose entries contain
+both bits and node paths. The dictionary keys supply the vocabulary. Weights are
+input to `build` and are not retained. Changing, adding, or deleting entries in
+the original weight mapping will leave the built tree and codebook unchanged.
+Vocabulary objects themselves are not deep-copied.
 
 Tests use manually prepared `StableNode` fixtures through one test-only helper
 that calls Julia's generated field constructor. Adding fields requires updating
 that helper rather than each behavior test. Cache layout and node numbering
 remain implementation details; `build` is the public construction API.
 
-`build` and `nodepath` are methodless declarations. Weighted construction, lookup
-methods, sequence containers, incremental updates, whole-message encoding, and
-decoding are not implemented. Default-tree and weight-copying behavior are
-specified by tests for future implementation.
+`build` starts with one leaf per object in a minimum-priority queue. It repeatedly
+merges the two lightest trees, using their summed weight as the parent's priority.
+Once one tree remains, a traversal caches each leaf's bits and internal node IDs.
+
+The weight mapping must be nonempty and contain finite, nonnegative real weights.
+A single-object vocabulary has an empty code and node path. Equal weights may
+produce different, equally optimal codes; branch orientation and node numbering
+are not guaranteed across builds. Whole-message encoding and decoding are not
+implemented.
 
 ## Running the tests
 
@@ -74,7 +92,5 @@ Disable Aqua checks for an interface-only run:
 RUN_AQUA=false julia --project -e 'using Pkg; Pkg.test()'
 ```
 
-Package loading, declarations, and Aqua checks should pass. Interface tests report
-ordinary failures or errors and a nonzero exit status for missing functionality;
-they are not skipped or marked broken. No Huffman construction algorithm is
-provided in either the source or the test fixtures.
+The suite checks construction, code and node-path lookup, vocabulary queries,
+read-only sequences, independence from input changes, and package quality with Aqua.
