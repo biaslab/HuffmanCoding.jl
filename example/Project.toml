@@ -1,0 +1,7 @@
+[deps]
+AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
+Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
+HuffmanCoding = "12b3a2ee-5e53-4990-bc43-24d1e165e8f9"
+
+[sources]
+HuffmanCoding = {path = ".."}

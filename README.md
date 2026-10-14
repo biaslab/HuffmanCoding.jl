@@ -69,6 +69,29 @@ produce different, equally optimal codes; branch orientation and node numbering
 are not guaranteed across builds. Whole-message encoding and decoding are not
 implemented.
 
+## Visualizing a tree
+
+The Gutenberg example renders a labeled tree as a scalable SVG. Leaves show
+characters, bit codes, and frequencies; internal nodes show their IDs. Spaces
+and newlines have readable labels.
+
+With [Graphviz](https://graphviz.org/) installed (`brew install graphviz` on macOS):
+
+```sh
+julia --project=example -e 'using Pkg; Pkg.instantiate()'
+julia --project=example example/EncodingGutenberg.jl
+```
+
+The SVG is saved to `example/output/huffman-tree.svg`.
+You can also visualize an existing codebook from Julia:
+
+```julia
+include("example/PlotTree.jl")
+svg_path = plot_tree(hc.tree)  # optionally pass weights=weights
+```
+
+[![Huffman tree for Alice in Wonderland](viz/huffman-tree.svg)](viz/huffman-tree.svg)
+
 ## Running the tests
 
 The test layout follows
