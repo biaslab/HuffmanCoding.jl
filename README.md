@@ -54,15 +54,6 @@ input to `build` and are not retained. Changing, adding, or deleting entries in
 the original weight mapping will leave the built tree and codebook unchanged.
 Vocabulary objects themselves are not deep-copied.
 
-Tests use manually prepared `StableNode` fixtures through one test-only helper
-that calls Julia's generated field constructor. Adding fields requires updating
-that helper rather than each behavior test. Cache layout and node numbering
-remain implementation details; `build` is the public construction API.
-
-`build` starts with one leaf per object in a minimum-priority queue. It repeatedly
-merges the two lightest trees, using their summed weight as the parent's priority.
-Once one tree remains, a traversal caches each leaf's bits and internal node IDs.
-
 The weight mapping must be nonempty and contain finite, nonnegative real weights.
 A single-object vocabulary has an empty code and node path. Equal weights may
 produce different, equally optimal codes; branch orientation and node numbering
