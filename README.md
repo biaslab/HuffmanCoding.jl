@@ -40,14 +40,6 @@ internal nodes have `object = nothing`. A node is a leaf when it has no children
 so `nothing` can also be a legitimate vocabulary object. Each vocabulary object
 labels exactly one leaf.
 
-Following bits from the root (`false` selects the first child, `true` the second)
-ends at the leaf containing the encoded object. For example, the test fixture's
-code `10` reaches node 4, then leaf 1 with `(id = 1, object = :a)`. This makes the
-tree interpretable without a separate leaf-to-object dictionary or the original
-weights. `nodepath(hc, :a)` is `[5, 4]`: bit `1` is chosen at root 5, then bit `0`
-at internal node 4. The sibling `:b` has code `11` and the same node path `[5, 4]`;
-the final bit selects a different leaf. For `:c`, code `0` has node path `[5]`.
-
 `HuffmanCode` holds only the tree and an internal dictionary whose entries contain
 both bits and node paths. The dictionary keys supply the vocabulary. Weights are
 input to `build` and are not retained. Changing, adding, or deleting entries in
