@@ -1,0 +1,21 @@
+name = "HuffmanCoding"
+uuid = "12b3a2ee-5e53-4990-bc43-24d1e165e8f9"
+version = "0.1.0"
+
+[deps]
+AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
+
+[compat]
+AbstractTrees = "0.4"
+Aqua = "0.8"
+Test = "1.10"
+TestItemRunner = "1"
+julia = "1.10"
+
+[extras]
+Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+TestItemRunner = "f8b46487-2199-4994-9208-9a1283c18c0a"
+
+[targets]
+test = ["Aqua", "Test", "TestItemRunner"]
